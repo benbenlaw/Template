@@ -24,10 +24,9 @@ versionRange="${minecraft_version_range}"
 ordering="NONE"
 side="BOTH"
 
-
 [[dependencies."${mod_id}"]]
-modId="jei"
-type="optional"
-versionRange="jei-1.21-neoforge-19.8.0.97"
+modId="bblcore"
+type="required"
+versionRange="1.21.6-1.4.2"
 ordering="NONE"
 side="BOTH"

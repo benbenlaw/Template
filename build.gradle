@@ -5,10 +5,9 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.0.165'
+    id 'net.neoforged.moddev' version '2.0.78'
     id 'net.darkhax.curseforgegradle' version '1.1.24'
     id "com.modrinth.minotaur" version "2.+"
-
 }
 
 version = "${minecraft_version}-${mod_version}"
@@ -25,33 +24,48 @@ repositories {
         }
     }
 }
+
 base {
     archivesName = mod_id
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
-runs {
-    configureEach {
-        systemProperty 'forge.logging.markers', 'REGISTRIES'
-        systemProperty 'forge.logging.console.level', 'debug'
-        modSource project.sourceSets.main
+neoForge {
+    version = project.neo_version
+
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
     }
 
-    client {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+    runs {
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            systemProperty 'forge.logging.console.level', 'debug'
+        }
+
+        client {
+            client()
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        server {
+            server()
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+            programArgument '--nogui'
+        }
+
+        data {
+            clientData()
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
     }
 
-    server {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-        arguments '--nogui'  // change here
-    }
-    gameTestServer {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-    }
-
-    data {
-        arguments '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+    mods {
+        template {
+            sourceSet sourceSets.main
+        }
     }
 }
 
@@ -63,16 +77,10 @@ configurations {
 
 dependencies {
 
-    implementation "net.neoforged:neoforge:${neo_version}"
-
-    //JEI
-
-    compileOnly "curse.maven:jei-238222:5606861"
-    runtimeOnly "curse.maven:jei-238222:5606861"
-
     //BBL Core
-    compileOnly "curse.maven:bbl-core-1135181:6240092"
-    runtimeOnly "curse.maven:bbl-core-1135181:6240092"
+    compileOnly "curse.maven:bbl-core-1135181:6679405"
+    runtimeOnly "curse.maven:bbl-core-1135181:6679405"
+
 }
 
 tasks.withType(ProcessResources).configureEach {
@@ -96,6 +104,7 @@ tasks.withType(ProcessResources).configureEach {
     }
 }
 
+// Example configuration to allow publishing using the maven-publish plugin
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
@@ -121,6 +130,7 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
 
+// IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
 idea {
     module {
         downloadSources = true
@@ -135,26 +145,26 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
 
     apiToken = System.getenv("curseforge_token").toString()
 
-    def projectId = 649644
+    def projectId = 1153960
     def mainFile = upload(projectId, jar)
 
     mainFile.changelog = changelog
     mainFile.addOptional("jei") // JEI
     mainFile.addRequirement("bbl-core")
     mainFile.releaseType = "release"
-    mainFile.gameVersions.addAll("1.21", "1.21.1")
+    mainFile.gameVersions.addAll(minecraft_version)
 }
 
 tasks.getByName("modrinth").setGroup("modpublishing")
 
 modrinth {
     token = System.getenv("modrinth_token").toString()
-    projectId = "rzq32Rx3"
+    projectId = "4K7cmETW"
     versionType = "release"
-    versionName = "opolisutilities-" + "$minecraft_version" + "-" + "$mod_version"
+    versionName = "bbl-cloche-" + "$minecraft_version" + "-" + "$mod_version"
     uploadFile = jar // With Loom, this MUST be set to `remapJar` instead of `jar`!
 
-    gameVersions.addAll("1.21", "1.21.1")
+    gameVersions.addAll(minecraft_version)
 
     loaders = ["neoforge"]
     changelog = project.changelog
@@ -165,4 +175,6 @@ modrinth {
 }
 
  */
+
+
 
